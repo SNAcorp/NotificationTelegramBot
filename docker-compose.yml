@@ -1,0 +1,14 @@
+services:
+  web-tasks:
+    build: .
+    command: /wait-for-it.sh db-bot:5432 -- uvicorn app.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    environment:
+      - BOT_TOKEN=
+    volumes:
+      - logs:/logs
+
+volumes:
+  logs:
+    driver: local
