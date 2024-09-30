@@ -1,20 +1,18 @@
 services:
-  bot:
+  telegram-bot:
     build: .
-    container_name: fastapi_telegram
+    container_name: telegram_bot
     ports:
-      - "8000:8000"
+      - "8012:8012"
+    depends_on:
+      - telegram-redis
+    environment:
+      - API_TOKEN=6874495766:AAGyocvfJ-DzaqDQfhMe7L7BeEzlG55S1lM
     volumes:
       - .:/app
-    environment:
-      - BOT_TOKEN=YOUR_BOT_TOKEN
-    networks:
-      - app_network
 
-networks:
-  app_network:
-    driver: bridge
-    
-volumes:
-  logs:
-    driver: local
+  telegram-redis:
+    image: "redis:alpine"
+    container_name: telegram-redis
+    ports:
+      - "6379:6379"
