@@ -11,11 +11,28 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.context import FSMContext
 from loguru import logger
 
+import phonenumbers
+from phonenumbers import PhoneNumberFormat
+
 logger.add("debug.log", format="{time} {level} {message}", level="DEBUG")
 
 API_TOKEN = os.getenv('API_TOKEN')
 REDIS_HOST = 'telegram-redis'  # Используем название сервиса из docker-compose
 REDIS_PORT = 6379  # Порт Redis
+
+def normalize_phone_number(phone_number):
+    # Парсим номер в стандарт E164, предполагая, что номер российский (+7)
+    parsed_number = phonenumbers.parse(phone_number, "RU")
+
+    # Проверяем, является ли номер валидным
+    if not phonenumbers.is_valid_number(parsed_number):
+        raise ValueError("Неверный формат номера телефона")
+
+    # Приводим к международному формату, заменяем +7 на 7
+    formatted_number = phonenumbers.format_number(parsed_number, PhoneNumberFormat.E164)
+
+    # Приводим к формату 79...
+    return formatted_number.replace("+7", "7")
 
 # Инициализация бота и диспетчера с хранилищем FSM
 bot = Bot(token=API_TOKEN)
@@ -48,7 +65,7 @@ async def send_welcome(message: Message, state: FSMContext):
 # Обработчик получения контакта
 @dp.message(lambda message: message.contact is not None)
 async def handle_contact(message: types.Message, state: FSMContext):
-    phone_number = message.contact.phone_number
+    phone_number = normalize_phone_number(message.contact.phone_number)
     chat_id = message.chat.id
     logger.info(f"Received phone number: {phone_number}")
     # Сохраняем номер телефона и chat_id в Redis

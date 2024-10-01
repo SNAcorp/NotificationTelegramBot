@@ -3,3 +3,4 @@ aiohttp
 loguru
 redis
 python-multipart
+phonenumbers
